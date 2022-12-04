@@ -4,3 +4,123 @@ import requests
 import time
 import datetime
 import smtplib
+
+# connect to website
+
+URL = 'https://www.amazon.de/-/en/dp/B0BHLHH4ZR/ref=sr_1_39?crid=2SQXO8N91NY5N&keywords=data%2Banalyst%2Btshirt&qid=1670114658&sprefix=data%2Banalyst%2Btshirt%2Caps%2C152&sr=8-39'
+
+headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36",    "X-Amzn-Trace-Id": "Root=1-638bee0f-0bec816b264f33635e461b7f"}
+ 
+page = requests.get(URL, headers=headers)  
+
+soup1 = BeautifulSoup(page.content, "html.parser")
+
+soup2 = BeautifulSoup(soup1.prettify(), "html.parser")
+
+title = soup2.find(id='productTitle').get_text(strip=True)
+
+price = soup2.find(name="span", class_='a-offscreen').getText(strip=True)
+
+print(title)
+
+print(price)
+
+# cleaning data
+price= price.strip()[1:]
+print(price)
+
+import datetime 
+
+today = datetime.date.today()
+print(today)
+
+# Create CSV and write headers and data into the file
+import csv
+
+header = ['Title', 'Price', 'Date']
+data = [title, price, today]
+
+with open('AmazonWebScrapperDataset.csv', 'w' ,newline = '' , encoding= 'UTF8') as f:
+    writer= csv.writer(f)
+    writer.writerow(header)
+    writer.writerow(data)
+    
+import pandas as pd
+
+df= pd.read_csv(r'C:\Users\Abdul Moanam\Amazon web scrapping\AmazonWebScrapperDataset.csv')
+
+print(df)
+
+# now appending data to csv
+
+with open('AmazonWebScrapperDataset.csv','a+',newline ='',encoding= 'UTF8') as f:
+    writer= csv.writer(f)
+    writer.writerow(data)
+    
+#cannot run this code everytime when we need to append data, can automate it
+#Combine all of the above code into one function
+
+def check_price():
+    URL = 'https://www.amazon.de/-/en/dp/B0BHLHH4ZR/ref=sr_1_39?crid=2SQXO8N91NY5N&keywords=data%2Banalyst%2Btshirt&qid=1670114658&sprefix=data%2Banalyst%2Btshirt%2Caps%2C152&sr=8-39'
+
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36",    "X-Amzn-Trace-Id": "Root=1-638bee0f-0bec816b264f33635e461b7f"}
+ 
+    page = requests.get(URL, headers=headers)  
+
+    soup1 = BeautifulSoup(page.content, "html.parser")
+
+    soup2 = BeautifulSoup(soup1.prettify(), "html.parser")
+
+    title = soup2.find(id='productTitle').get_text(strip=True)
+
+    price = soup2.find(name="span", class_='a-offscreen').getText(strip=True)
+    
+    price= price.strip()[1:]
+    
+    import datetime 
+
+    today = datetime.date.today()
+    
+    import csv
+
+    header = ['Title', 'Price', 'Date']
+    
+    data = [title, price, today]
+    
+    with open('AmazonWebScrapperDataset.csv','a+',newline ='',encoding= 'UTF8') as f:
+        writer= csv.writer(f)
+        writer.writerow(data)
+        
+    if (price < 10):
+        send_email()
+        
+# timer to append the data; time is in seconds
+# Runs check_price after a set time and inputs data into your CSV
+
+while(True):
+    check_price()
+    time.sleep(86400)
+
+# to check the appended data in the csv file
+import pandas as pd
+
+df= pd.read_csv(r'C:\Users\Abdul Moanam\Amazon web scrapping\AmazonWebScrapperDataset.csv')
+
+print(df)
+
+# If you want to try sending yourself an email, when price hits below a certain level
+
+def send_mail():
+    server = smtplib.SMTP_SSL('smtp.gmail.com',465)
+    server.ehlo()
+    #server.starttls()
+    server.ehlo()
+    server.login('abdulmoanam@gmai.com','xxxxxxxxxxxxxx')
+    
+    subject = "The Shirt you want is below $10! Now is your chance to buy!"
+    body = "Abdul, The price on the tagged product is reduced, go check the link to buy the product. Link here: https://www.amazon.de/-/en/dp/B0BHLHH4ZR/ref=sr_1_13?crid=3TV2GQXDN60F9&keywords=Collecting+Data+Is+My+Cardio+Data+Scientist&qid=1670186933&sprefix=collecting+data+is+my+cardio+data+scientist%2Caps%2C779&sr=8-13"
+   
+    msg = f"Subject: {subject}\n\n{body}"
+    
+    server.sendmail('abdulmoanam@gmail.com',msg)
+    
